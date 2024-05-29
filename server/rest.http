@@ -1,0 +1,35 @@
+
+POST http://localhost:18080/inference/nonstream
+content-type: application/json
+
+{
+    "prompt":"Please provide the information about the planet Mars."
+}
+
+###
+
+
+POST http://localhost:18080/inference/stream
+content-type: application/json
+
+{
+    "prompt":"Please provide the information about the planet Mars."
+}
+
+### Debugger
+
+POST http://localhost:8000/inference/nonstream
+content-type: application/json
+
+{
+    "prompt":"Please provide the information about the planet Mars."
+}
+
+### Debugger
+
+POST http://localhost:8000/inference/stream
+content-type: application/json
+
+{
+    "prompt":"Please provide the information about the planet Mars."
+}
