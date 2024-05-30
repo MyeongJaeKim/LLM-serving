@@ -1,9 +1,9 @@
 # Notice
 ## 리포지터리의 목적
 * 대규모 언어 모델(LLM)을 실제 서비스(live) 환경에서 사용하려면 모델을 로드해주는 서빙 라이브러리가 필요합니다. 다음 서빙 라이브러리들을 사용하여 모델을 로드하고 REST API 인터페이스를 제공하는 코드를 저장소에서 제공합니다.
-** Transformers (huggingface)
-** vLLM (UC Berkely)
-** TensorRT-LLM (NVIDIA)
+  * Transformers (huggingface)
+  * vLLM (UC Berkely)
+  * TensorRT-LLM (NVIDIA)
 * 서빙 라이브러리 별로 하이퍼 파라미터와 성능 최적화 파라미터 지정 기능, 스트리밍 및 블러킹 인터페이스를 동시에 제공합니다.
 
 ## 버전
