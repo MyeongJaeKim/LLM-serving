@@ -1,5 +1,5 @@
-from vLLM_modelserver import vLLM
-#from tensorrtLLM_modelserver import TensorRTLLM
+#from vLLM_modelserver import vLLM
+from tensorrtLLM_modelserver import TensorRTLLM
 import torch
 # from transformer_modelserver import HF_Transformer
 
@@ -27,8 +27,8 @@ top_p = 0.95
 max_tokens = 1024
 
 # only for TensorRT-LLM
-converted_model_path = "TRT-LLM/mistral-7b-1gpu-bf16"
-origin_model_path = "TRT-LLM/Mistral-7B-Instruct-v0.2"
+converted_model_path = "./.tensorrt-model/Mistral-7B-Instruct-v0.2/output"
+origin_model_path = "./.tensorrt-model/Mistral-7B-Instruct-v0.2"
 
 # -------------------------
 # GPU dependent settings
@@ -53,13 +53,13 @@ dtype = 'float16'
 # ! Each dependent libraries of vLLM, TensorRT-LLM are different
 # -------------------------
 # vLLM
-llm_engine = vLLM(model_id, max_tokens, temperature, top_p,
-                  stream_mode=False,
-                  gpu_specified=gpu_specified, gpu_idx=gpu_idx,
-                  dtype=dtype)
+# llm_engine = vLLM(model_id, max_tokens, temperature, top_p,
+#                   stream_mode=False,
+#                   gpu_specified=gpu_specified, gpu_idx=gpu_idx,
+#                   dtype=dtype)
 
 # TensorRT-LLM
-#llm_engine = TensorRTLLM(converted_model_path, origin_model_path, max_tokens, temperature, top_p)
+llm_engine = TensorRTLLM(converted_model_path, origin_model_path, max_tokens, temperature, top_p)
 
 # Transformers (huggingface)
 # CURRENTLY NOT AVAILABLE - GPU specifying (gpu idx)

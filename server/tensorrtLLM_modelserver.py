@@ -1,8 +1,10 @@
 from abstract_modelserver import AbstractModelServer
+from timer_decorator import async_timer
 
 import time
 
 from tensorrt_llm import LLM, ModelConfig
+from tensorrt_llm.hlapi.utils import SamplingConfig
 from tensorrt_llm.hlapi.tokenizer import TokenizerBase, TransformersTokenizer
 
 # https://github.com/NVIDIA/TensorRT-LLM/tree/main/examples/high-level-api
@@ -18,39 +20,39 @@ class TensorRTLLM(AbstractModelServer):
         # 컨버팅 후 토크나이저가 안 나타나서, 수동으로 바인딩
         self.tokenizer = TransformersTokenizer.from_pretrained(pretrained_model_dir = origin_model_path)
 
-        # Async LLM
-        #
-        self.async_llm = LLM(model_config, streaming_llm = True , tokenizer=self.tokenizer)
+        self.llm_engine = LLM(model_config, streaming_llm = True , tokenizer=self.tokenizer)
 
-        print(self.async_llm)
+    def __calc_new_token_length(self, prompt: str) -> int:
+        prompt_token_ids = self.tokenizer.encode(prompt)
+        max_new_tokens = self.max_tokens - len(prompt_token_ids)
+        print(f'Calculated max_new_tokens : {max_new_tokens}')
+        return max_new_tokens
 
-        self.sampling_config = self.async_llm.get_default_sampling_config()
-        self.sampling_config.temperature = [self.temperature]
+    def __generate_sampling_configs(self, max_new_tokens: int) -> SamplingConfig:
+        sampling_config: SamplingConfig = self.llm_engine.get_default_sampling_config()
+        sampling_config.temperature = [self.temperature]
         # top_p, top_k 는 아직 지원되지 않는다.
-        #self.sampling_config.top_p = [self.top_p]
+        #sampling_config.top_p = [self.top_p]
+        sampling_config.max_new_tokens = max_new_tokens
+
+        return sampling_config
+
 
     # Override stream
+    @async_timer
     async def stream_inference(self, prompt: str):
-        # Performance measure
-        index, num_tokens = 0, 0
-        start = time.monotonic_ns()
+        index = 0
 
-        async for output in self.async_llm.generate_async(prompt,
-                                                          self.sampling_config,
+        max_new_tokens = self.__calc_new_token_length(prompt)
+        sampling_configs = self.__generate_sampling_configs(max_new_tokens)
+
+        async for output in self.llm_engine.generate_async(prompt,
+                                                          sampling_configs,
                                                           streaming = True):
             text_delta = output.text[index:]
-            print(text_delta)
             num_tokens = len(output.token_ids)
             index = len(output.text)
             yield text_delta
-        
-        # Performance Report
-        duration_s = (time.monotonic_ns() - start) / 1e9
-
-        print (
-            f"\n\tGenerated {num_tokens} tokens in {duration_s:.1f}s,"
-            f" throughput = {num_tokens / duration_s:.0f} tokens/second.\n"
-        )
 
     # Override non-stream inference
     def inference(self, prompts):
