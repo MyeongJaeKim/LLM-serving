@@ -11,6 +11,12 @@
 * Python 버전 : 3.10.x
 * CUDA : 12.x
 
+## 시스템 라이브러리 설치
+### TensorRT-LLM
+```bash
+apt-get -y install openmpi-bin libopenmpi-dev
+```
+
 # 환경 설정
 vLLM 과 TensorRT-LLM 은 같은 라이브러리의 다른 버전을 사용합니다. 그래서 같은 가상환경에서 모든 의존성 라이브러리를 설치할 수 없습니다. 다음을 참고하여 가상환경을 설정하시기 바랍니다.
 ## 가상환경 만들기
