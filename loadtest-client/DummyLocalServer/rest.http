@@ -1,0 +1,8 @@
+###
+
+POST http://localhost:8080/inference/stream
+content-type: application/json
+
+{
+    "prompt":"Please provide the information about the planet Mars."
+}

@@ -4,3 +4,4 @@ server/run_server.sh
 server/.venv
 server/.venv*
 server/hf_token.sh
+__pycache__
