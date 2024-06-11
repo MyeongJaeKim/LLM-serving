@@ -10,14 +10,16 @@ class FileLogger():
         # log format
         formatter = logging.Formatter('%(message)s')
 
-        streamHandler = logging.StreamHandler()
-        fileHandler = logging.FileHandler('logs/log.out')
+        #streamHandler = logging.StreamHandler()
+        fileHandler = logging.FileHandler('logs/log.out', encoding='utf-8')
 
-        streamHandler.setFormatter(formatter)
+        #streamHandler.setFormatter(formatter)
         fileHandler.setFormatter(formatter)
 
-        self.logger.addHandler(streamHandler)
+        #self.logger.addHandler(streamHandler)
         self.logger.addHandler(fileHandler)
+
+        self.logger.propagate = False
 
     def log(self, msg: str) -> None:
         self.logger.info(msg)
