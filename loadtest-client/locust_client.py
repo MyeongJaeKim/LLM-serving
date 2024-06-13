@@ -14,6 +14,7 @@ from userid_provider import UserIdProvider
 
 # Prompt 데이터
 prompt_provier = PromptProvider('./filtered_truthfulqa_data.csv')
+# Random  user Id generator
 userid_provider = UserIdProvider()
 
 # -------------------------------------------------------------------------------------
@@ -22,10 +23,12 @@ userid_provider = UserIdProvider()
 
 # Number of users
 start_user_count = 1
-max_user_count = 10
+max_user_count = 50
 
+# 추가 생성할 user 의 수
 rampup_user = 1
-rampup_interval_sec = 30
+# User 생성 인터벌
+rampup_interval_sec = 10
 
 # User 초당 생성 비율
 spawn_rate = rampup_user / rampup_interval_sec
@@ -42,13 +45,11 @@ class ChattingUser(FastHttpUser):
     wait_time = between(1, 2)
     #host = "http://localhost:8080"
     # DGX
-    host = "http://50.1.104.14:8000"
-    #url = host + '/inference/stream'
-    url = host + '/v1/completions'
+    #host = "http://50.1.104.14:8000"
+    host = "http://50.1.104.14:18080"
+    url = host + '/inference/stream'
+    #url = host + '/v1/completions'
     weight = 1
-
-    # 현재 상태
-    current_user_count = 0
 
     headers = {
         'Content-Type': 'application/json'
@@ -59,9 +60,8 @@ class ChattingUser(FastHttpUser):
         prompt: str = prompt_provier.select_question()
         userId: str = userid_provider.generate()
 
-        self.current_user_count += 1
-
         print(f'Current running users : {runner.user_count}')
+        log(userId, f"CurrentUserCount || {runner.user_count}")
         log(userId, f"Start to inference || Prompt : {prompt}")
 
         # for FastAPI
@@ -70,13 +70,13 @@ class ChattingUser(FastHttpUser):
         }
 
         # for vLLM OpenAI-compat
-        request_body = {
-            "model": "/data1/gptL_7B_r240103",
-            "prompt": prompt,
-            "max_tokens": 500,
-            "temperature": 0.9,
-            "stream": True
-        }
+        # request_body = {
+        #     "model": "/data1/gptL_7B_r240103",
+        #     "prompt": prompt,
+        #     "max_tokens": 500,
+        #     "temperature": 0.9,
+        #     "stream": True
+        # }
 
         response = requests.post(self.url, headers=self.headers, json=request_body, stream=True)
 
@@ -85,26 +85,35 @@ class ChattingUser(FastHttpUser):
         for chunk in response.iter_content(chunk_size=None):
             data: str = chunk.decode('utf-8')
 
+            # --------------------------------
             # for FastAPI
-            #log(userId, f'Token received : {data}')
+            # --------------------------------
+            #token = data.strip()
+            # Escape new line
+            token = data.replace("\n", " ")
 
-             # for vLLM OpenAI-compat
-            data = data[5:]
+            # --------------------------------
+            # for vLLM OpenAI-compat
+            # --------------------------------
+            # data = data[5:]
 
-            # Generation stopped
-            if ' [DONE]' in data.strip():
-                continue
+            # # End of data stream
+            # if '[DONE]' in data.strip():
+            #     continue
 
-            try:
-                obj = json.loads(data)
-            except:
-                log(userId, f'Error object {data}')
-                continue
+            # try:
+            #     obj = json.loads(data)
+            # except:
+            #     log(userId, f'Error object {data}')
+            #     continue
 
-            token = obj['choices'][0]['text']
-            # 개행 제거
-            token = token.strip()
+            # token = obj['choices'][0]['text']
+            # # 개행 제거
+            # token = token.strip()
             text += token
+
+            # --------------------------------
+
             log(userId, f'Token received : {token}')
         
         log(userId, f'End of request || Text : {text}')
