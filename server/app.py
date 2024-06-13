@@ -3,7 +3,7 @@ from tensorrtLLM_modelserver import TensorRTLLM
 import torch
 # from transformer_modelserver import HF_Transformer
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
 # -------------------------
@@ -74,12 +74,17 @@ llm_engine = TensorRTLLM(converted_model_path, origin_model_path, max_tokens, te
 # ! await 가 async 호출 스택 내 존재하면 인터프리터 쓰레드 풀을 사용하게 되어, 모든 request 는 blocking 처리됨.
 
 @app.post("/inference/stream")
-async def inference_stream(requestBody: UserPrompt):
+async def inference_stream(requestBody: UserPrompt, request: Request):
 
     user_prompt: str = requestBody.prompt
 
     async def stream_generation(prompt):
         async for text in llm_engine.stream_inference(prompt):
+
+            # Detect client leave
+            if await request.is_disconnected():
+                return
+
             yield text
     
     return StreamingResponse(stream_generation(user_prompt), media_type="text/event-stream")
