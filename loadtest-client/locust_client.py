@@ -23,7 +23,7 @@ userid_provider = UserIdProvider()
 
 # Number of users
 start_user_count = 1
-max_user_count = 50
+max_user_count = 150
 
 # 추가 생성할 user 의 수
 rampup_user = 1
@@ -33,8 +33,8 @@ rampup_interval_sec = 10
 # User 초당 생성 비율
 spawn_rate = rampup_user / rampup_interval_sec
 
-# 전체 테스트 길이
-test_length_in_min = 10 * 60
+# 전체 테스트 길이 (램프업 대기 + 10분 간 유지)
+test_length_in_min = max_user_count * rampup_interval_sec + 10 * 60
 # 테스트 종료 시점에 running user 들이 요청을 마치도록 기다리는 시간
 graceful_shutdown_timeout = 5 * 60
 
