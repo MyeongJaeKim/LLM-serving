@@ -1,2 +1,6 @@
 .venv*
 logs/*
+test_against_aione.py
+longbench/*.jsonl
+logs/*.out
+analytics/*.out

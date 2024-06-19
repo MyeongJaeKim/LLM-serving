@@ -23,20 +23,20 @@ userid_provider = UserIdProvider()
 
 # Number of users
 start_user_count = 1
-max_user_count = 150
+max_user_count = 1000
 
 # 추가 생성할 user 의 수
-rampup_user = 1
+rampup_user = 10
 # User 생성 인터벌
-rampup_interval_sec = 10
+rampup_interval_sec = 5
 
 # User 초당 생성 비율
 spawn_rate = rampup_user / rampup_interval_sec
 
 # 전체 테스트 길이 (램프업 대기 + 10분 간 유지)
-test_length_in_min = max_user_count * rampup_interval_sec + 10 * 60
+test_length_in_min = max_user_count / (rampup_user / rampup_interval_sec) + 15 * 60
 # 테스트 종료 시점에 running user 들이 요청을 마치도록 기다리는 시간
-graceful_shutdown_timeout = 5 * 60
+graceful_shutdown_timeout = 15 * 60
 
 # -------------------------------------------------------------------------------------
 # Definition of each load
@@ -47,6 +47,9 @@ class ChattingUser(FastHttpUser):
     # DGX
     #host = "http://50.1.104.14:8000"
     host = "http://50.1.104.14:18080"
+    # H100
+    host = "http://10.1.3.142:18080"
+
     url = host + '/inference/stream'
     #url = host + '/v1/completions'
     weight = 1
