@@ -13,7 +13,7 @@ from prompt_provider import PromptProvider
 from userid_provider import UserIdProvider
 
 # Prompt 데이터
-prompt_provier = PromptProvider('./filtered_truthfulqa_data.csv')
+prompt_provier = PromptProvider("./filtered_truthfulqa_data.csv")
 # Random  user Id generator
 userid_provider = UserIdProvider()
 
@@ -25,52 +25,50 @@ userid_provider = UserIdProvider()
 start_user_count = 1
 max_user_count = 1000
 
-# 추가 생성할 user 의 수
-rampup_user = 10
-# User 생성 인터벌
-rampup_interval_sec = 5
+# test timings
+time_rampup_period_min = 5
+time_test_period_min = 5
+time_shutdown_period_min = 5
 
 # User 초당 생성 비율
-spawn_rate = rampup_user / rampup_interval_sec
+spawn_rate = max_user_count / (time_rampup_period_min * 60)
 
 # 전체 테스트 길이 (램프업 대기 + 10분 간 유지)
-test_length_in_min = max_user_count / (rampup_user / rampup_interval_sec) + 15 * 60
+total_testlength_min = (time_rampup_period_min + time_test_period_min) * 60
+
 # 테스트 종료 시점에 running user 들이 요청을 마치도록 기다리는 시간
-graceful_shutdown_timeout = 15 * 60
+graceful_shutdown_timeout = time_shutdown_period_min * 60
+
 
 # -------------------------------------------------------------------------------------
 # Definition of each load
 # -------------------------------------------------------------------------------------
 class ChattingUser(FastHttpUser):
     wait_time = between(1, 2)
-    #host = "http://localhost:8080"
+    # host = "http://localhost:8080"
     # DGX
-    #host = "http://50.1.104.14:8000"
-    host = "http://50.1.104.14:18080"
+    # host = "http://50.1.104.14:8000"
+    # host = "http://50.1.104.14:18080"
     # H100
     host = "http://10.1.3.142:18080"
 
-    url = host + '/inference/stream'
-    #url = host + '/v1/completions'
+    url = host + "/inference/stream"
+    # url = host + '/v1/completions'
     weight = 1
 
-    headers = {
-        'Content-Type': 'application/json'
-    }
+    headers = {"Content-Type": "application/json"}
 
     @task
     def ask_llm(self):
         prompt: str = prompt_provier.select_question()
         userId: str = userid_provider.generate()
 
-        print(f'Current running users : {runner.user_count}')
+        print(f"Current running users : {runner.user_count}")
         log(userId, f"CurrentUserCount || {runner.user_count}")
         log(userId, f"Start to inference || Prompt : {prompt}")
 
         # for FastAPI
-        request_body = {
-            'prompt': prompt
-        }
+        request_body = {"prompt": prompt}
 
         # for vLLM OpenAI-compat
         # request_body = {
@@ -81,17 +79,19 @@ class ChattingUser(FastHttpUser):
         #     "stream": True
         # }
 
-        response = requests.post(self.url, headers=self.headers, json=request_body, stream=True)
+        response = requests.post(
+            self.url, headers=self.headers, json=request_body, stream=True
+        )
 
-        text: str = ''
+        text: str = ""
 
         for chunk in response.iter_content(chunk_size=None):
-            data: str = chunk.decode('utf-8')
+            data: str = chunk.decode("utf-8")
 
             # --------------------------------
             # for FastAPI
             # --------------------------------
-            #token = data.strip()
+            # token = data.strip()
             # Escape new line
             token = data.replace("\n", " ")
 
@@ -117,16 +117,18 @@ class ChattingUser(FastHttpUser):
 
             # --------------------------------
 
-            log(userId, f'Token received : {token}')
-        
-        log(userId, f'End of request || Text : {text}')
+            log(userId, f"Token received : {token}")
+
+        log(userId, f"End of request || Text : {text}")
 
 
 # -------------------------------------------------------------------------------------
 
 setup_logging("INFO")
 
-env: Environment = Environment(user_classes=[ChattingUser], events=events, stop_timeout=graceful_shutdown_timeout)
+env: Environment = Environment(
+    user_classes=[ChattingUser], events=events, stop_timeout=graceful_shutdown_timeout
+)
 
 runner = env.create_local_runner()
 
@@ -135,7 +137,7 @@ env.stop_timeout
 # runner.
 
 # start a WebUI instance
-#web_ui = env.create_web_ui("127.0.0.1", 8089)
+# web_ui = env.create_web_ui("127.0.0.1", 8089)
 
 # execute init event handlers (only really needed if you have registered any)
 # web_ui=web_ui)
@@ -149,11 +151,10 @@ env.events.init.fire(environment=env, runner=runner)
 # start the test
 runner.start(max_user_count, spawn_rate=spawn_rate)
 
-gevent.spawn_later(test_length_in_min, runner.quit)
+gevent.spawn_later(total_testlength_min, runner.quit)
 
 # wait for the greenlets
 runner.greenlet.join()
 
 # stop the web server for good measures
 # web_ui.stop()
-

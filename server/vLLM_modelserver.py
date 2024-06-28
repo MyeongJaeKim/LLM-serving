@@ -30,7 +30,8 @@ class vLLM(AbstractModelServer):
             # Streaming engine
             engine_args = AsyncEngineArgs(
                 model = model_id,
-                dtype=dtype,
+                dtype = dtype,
+                max_num_seqs = 512,
                 # * Tensor parallelism test
                 # See : https://docs.vllm.ai/en/latest/serving/distributed_serving.html
                 #tensor_parallel_size=4
