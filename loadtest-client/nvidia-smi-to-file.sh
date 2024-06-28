@@ -21,4 +21,5 @@ nvidia-smi -i 1 -l 1 -f ./Data.csv --format=csv --query-gpu=timestamp,utilizatio
     #                           e - ECC Errors and PCIe Replay errors
     #                           t - PCIe Rx and Tx Throughput
 
-nvidia-smi dmon -s uet -i 7 -f gpu.log && tail -f gpu.log
+nvidia-smi dmon -s uvt -i 7 -f gpu.log && tail -f gpu.log
+nvidia-smi dmon -s uvtp -i 7 &

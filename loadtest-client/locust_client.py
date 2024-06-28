@@ -26,7 +26,7 @@ start_user_count = 1
 max_user_count = 1000
 
 # test timings
-time_rampup_period_min = 5
+time_rampup_period_min = 20
 time_test_period_min = 5
 time_shutdown_period_min = 5
 
